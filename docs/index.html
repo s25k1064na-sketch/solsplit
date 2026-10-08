@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:; base-uri 'none'; form-action 'none'">
+<meta charset="utf-8">
+<title>SolSplit Mock</title>
+<style>
+  *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;}
+  body{margin:0;background:#0f1724;color:#e8edf3;width:1280px;height:720px;overflow:hidden;}
+  header{padding:18px 30px;background:#121b2e;border-bottom:1px solid #223049;}
+  header h1{margin:0;font-size:26px;color:#5ee6c6;}
+  header p{margin:4px 0 0;font-size:13px;color:#9fb0c3;}
+  .main{display:flex;gap:20px;padding:20px 30px;}
+  .panel{background:#16213a;border:1px solid #223049;border-radius:10px;padding:18px;flex:1;}
+  .panel h2{margin:0 0 12px;font-size:18px;color:#fff;display:flex;justify-content:space-between;align-items:center;}
+  .members div{padding:8px 0;border-bottom:1px solid #223049;font-size:15px;}
+  .pos{color:#5ee6c6;}
+  .neg{color:#ff8a8a;}
+  button{background:#5ee6c6;color:#0f1724;border:none;padding:9px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;margin-top:12px;}
+  button.secondary{background:#324a6b;color:#e8edf3;}
+  ul{list-style:none;padding:0;margin:0;max-height:260px;overflow:hidden;}
+  li{padding:8px 0;border-bottom:1px solid #223049;font-size:14px;}
+  .overlay{position:fixed;top:0;left:0;width:1280px;height:720px;background:rgba(5,10,20,0.85);display:flex;align-items:center;justify-content:center;}
+  .hidden{display:none;}
+  .card{background:#16213a;border:1px solid #2c3d5c;border-radius:12px;padding:30px;width:420px;text-align:center;}
+  .card h3{margin-top:0;color:#5ee6c6;}
+  .qrbox{width:160px;height:160px;background:#0f1724;border:2px dashed #5ee6c6;margin:16px auto;display:flex;align-items:center;justify-content:center;font-size:12px;color:#9fb0c3;}
+  footer{position:absolute;bottom:8px;left:30px;font-size:11px;color:#5a6b85;}
+  .netline{font-size:14px;margin:6px 0;color:#d7e2ee;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>SolSplit</h1>
+  <p>On-chain bill splitting and group payments that settle instantly in stablecoins</p>
+</header>
+
+<div class="main">
+  <div class="panel">
+    <h2>Tokyo Trip <button class="secondary" data-demo="qr-btn" onclick="openQR()">Invite QR</button></h2>
+    <div class="members" id="members">
+      <div>Alice <span class="pos" id="bal-alice">+$120</span></div>
+      <div>Bob <span class="neg" id="bal-bob">-$60</span></div>
+      <div>Carol <span class="neg" id="bal-carol">-$60</span></div>
+    </div>
+    <button data-demo="settle-btn" onclick="openSettle()">Settle All in USDC</button>
+  </div>
+
+  <div class="panel">
+    <h2>Expenses</h2>
+    <ul id="expense-list">
+      <li>🍜 Dinner — $180 (paid by Alice)</li>
+      <li>🏨 Hotel — $240 (paid by Bob)</li>
+    </ul>
+    <button class="secondary" data-demo="add-expense-btn" onclick="addExpense()">+ Add Expense</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="qr-panel" data-demo="qr-panel">
+  <div class="card">
+    <h3>Invite to Tokyo Trip</h3>
+    <div class="qrbox">[ QR CODE ]</div>
+    <p style="font-size:12px;color:#9fb0c3;">solsplit.app/join/tokyo-trip-8821</p>
+    <button class="secondary" data-demo="close-qr-btn" onclick="closeQR()">Close</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="settle-panel" data-demo="settle-panel">
+  <div class="card">
+    <h3 id="settle-title">Netting Debts</h3>
+    <div id="settle-body">
+      <p class="netline">Bob → Alice: $60 USDC</p>
+      <p class="netline">Carol → Alice: $60 USDC</p>
+      <p style="font-size:12px;color:#9fb0c3;">Reduced from 4 possible transfers to 2.</p>
+      <button data-demo="confirm-settle-btn" onclick="confirmSettle()">Confirm Settle</button>
+    </div>
+    <button class="secondary" style="margin-top:10px;" onclick="closeSettle()">Close</button>
+  </div>
+</div>
+
+<footer>Prototype — all data is simulated</footer>
+
+<script>
+let expenseAdded = false;
+let settled = false;
+
+function addExpense(){
+  if(expenseAdded) return;
+  expenseAdded = true;
+  const ul = document.getElementById('expense-list');
+  const li = document.createElement('li');
+  li.textContent = "☕ Coffee — $30 (paid by Carol)";
+  ul.appendChild(li);
+  document.getElementById('bal-alice').textContent = "+$100";
+  document.getElementById('bal-bob').textContent = "-$40";
+  document.getElementById('bal-carol').textContent = "-$60";
+}
+
+function openSettle(){
+  document.getElementById('settle-panel').classList.remove('hidden');
+}
+function closeSettle(){
+  document.getElementById('settle-panel').classList.add('hidden');
+}
+
+function confirmSettle(){
+  settled = true;
+  document.getElementById('settle-title').textContent = "Settled!";
+  document.getElementById('settle-body').innerHTML =
+    '<p class="netline">2 transactions completed instantly via USDC.</p><p style="font-size:12px;color:#9fb0c3;">All balances are now zero.</p>';
+  document.getElementById('bal-alice').textContent = "$0";
+  document.getElementById('bal-bob').textContent = "$0";
+  document.getElementById('bal-carol').textContent = "$0";
+}
+
+function openQR(){
+  document.getElementById('qr-panel').classList.remove('hidden');
+}
+function closeQR(){
+  document.getElementById('qr-panel').classList.add('hidden');
+}
+</script>
+
+</body>
+</html>
